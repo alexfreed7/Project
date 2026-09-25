@@ -1,5 +1,7 @@
 # Ready Check
 
+**Live app:** https://readycheck-tau.vercel.app/
+
 A tiny app for getting a group out the door. Make a room, share the link, and
 everyone taps their own status (Not Ready / Getting Ready / Almost Ready /
 Ready to Go!) so you can see at a glance who's actually ready — no accounts,
