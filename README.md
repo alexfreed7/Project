@@ -7,6 +7,8 @@ no app install, just a link.
 
 - Anyone with the room link can join and update their own status.
 - Everyone's status updates live for the whole group (polls every ~2.5s).
+- Once people are out, they can add a quick note or location too (e.g. "at
+  Bar X", "in the bathroom") via a few one-tap suggestions or free text.
 - Rooms auto-expire after 24 hours of inactivity — nothing to clean up.
 
 ## How it's built

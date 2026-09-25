@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { redis, ROOM_TTL_SECONDS } from "../../../../lib/redis";
-import { STATUS_BY_ID, slugifyRoomId } from "../../../../lib/statuses";
+import { STATUS_BY_ID, slugifyRoomId, NOTE_MAX_LENGTH } from "../../../../lib/statuses";
 
 function roomKey(roomId) {
   return `readycheck:room:${roomId}`;
@@ -34,12 +34,13 @@ export async function POST(request, { params }) {
   const id = typeof body?.id === "string" ? body.id.slice(0, 64) : null;
   const name = typeof body?.name === "string" ? body.name.trim().slice(0, 30) : "";
   const status = typeof body?.status === "string" ? body.status : "";
+  const note = typeof body?.note === "string" ? body.note.trim().slice(0, NOTE_MAX_LENGTH) : "";
 
   if (!id || !name || !STATUS_BY_ID[status]) {
     return NextResponse.json({ error: "id, name, and a valid status are required" }, { status: 400 });
   }
 
-  const member = { name, status, updatedAt: Date.now() };
+  const member = { name, status, note, updatedAt: Date.now() };
   const key = roomKey(roomId);
   await redis.hset(key, { [id]: JSON.stringify(member) });
   await redis.expire(key, ROOM_TTL_SECONDS);

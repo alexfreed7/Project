@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, use } from "react";
-import { STATUSES, STATUS_BY_ID } from "../../../lib/statuses";
+import { STATUSES, STATUS_BY_ID, QUICK_NOTES, NOTE_MAX_LENGTH } from "../../../lib/statuses";
 
 const POLL_MS = 2500;
 
@@ -31,10 +31,12 @@ export default function RoomPage({ params }) {
   const [name, setName] = useState("");
   const [nameDraft, setNameDraft] = useState("");
   const [myStatus, setMyStatus] = useState(null);
+  const [noteDraft, setNoteDraft] = useState("");
   const [members, setMembers] = useState([]);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const pollRef = useRef(null);
+  const noteInitialized = useRef(false);
 
   useEffect(() => {
     const id = getOrCreateMemberId();
@@ -66,21 +68,34 @@ export default function RoomPage({ params }) {
     if (!memberId || !members.length) return;
     const mine = members.find((m) => m.id === memberId);
     if (mine) setMyStatus(mine.status);
+    if (mine && !noteInitialized.current) {
+      setNoteDraft(mine.note || "");
+      noteInitialized.current = true;
+    }
   }, [members, memberId]);
 
-  async function saveStatus(statusId) {
+  async function checkIn({ status, note }) {
     const trimmedName = nameDraft.trim();
     if (!trimmedName) return;
     setName(trimmedName);
     window.localStorage.setItem("readycheck:name", trimmedName);
-    setMyStatus(statusId);
+    setMyStatus(status);
 
     const res = await fetch(`/api/rooms/${roomId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: memberId, name: trimmedName, status: statusId }),
+      body: JSON.stringify({ id: memberId, name: trimmedName, status, note }),
     });
     if (res.ok) fetchMembers();
+  }
+
+  function saveStatus(statusId) {
+    checkIn({ status: statusId, note: noteDraft });
+  }
+
+  function saveNote(noteText) {
+    setNoteDraft(noteText);
+    checkIn({ status: myStatus || STATUSES[0].id, note: noteText });
   }
 
   function copyLink() {
@@ -142,6 +157,54 @@ export default function RoomPage({ params }) {
         )}
       </div>
 
+      <div className="card">
+        <label>What are you up to? (optional)</label>
+        <p className="subtitle" style={{ margin: "0 0 12px" }}>
+          Handy once people are out the door {"—"} share a quick location or note.
+        </p>
+        <div className="chip-row">
+          {QUICK_NOTES.map((n) => (
+            <button
+              key={n}
+              className={`chip${noteDraft === n ? " active" : ""}`}
+              onClick={() => saveNote(n)}
+              disabled={!nameDraft.trim()}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        <div className="share-row" style={{ marginTop: 12 }}>
+          <input
+            type="text"
+            placeholder="e.g. at Bar X, on the patio..."
+            value={noteDraft}
+            onChange={(e) => setNoteDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveNote(noteDraft);
+            }}
+            maxLength={NOTE_MAX_LENGTH}
+            disabled={!nameDraft.trim()}
+          />
+          <button
+            className="icon-btn"
+            onClick={() => saveNote(noteDraft)}
+            disabled={!nameDraft.trim()}
+          >
+            Update
+          </button>
+        </div>
+        {noteDraft && (
+          <button
+            className="icon-btn"
+            style={{ marginTop: 10, width: "100%" }}
+            onClick={() => saveNote("")}
+          >
+            Clear note
+          </button>
+        )}
+      </div>
+
       {members.length > 0 && (
         <div className="summary-banner">
           {allReady ? "Everyone's ready! Let's go \u{1F389}" : `${readyCount} of ${members.length} ready`}
@@ -163,6 +226,7 @@ export default function RoomPage({ params }) {
                     {m.name}
                     {m.id === memberId ? " (you)" : ""}
                   </div>
+                  {m.note && <div className="roster-note">{"\u{1F4CD}"} {m.note}</div>}
                   <div className="roster-time">{timeAgo(m.updatedAt)}</div>
                 </div>
                 {status && (

@@ -126,10 +126,16 @@ button {
 
 .roster-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 10px;
   padding: 12px 4px;
   border-bottom: 1px solid #2a2f4d;
+}
+
+.roster-item .badge {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .roster-item:last-child {
@@ -140,10 +146,37 @@ button {
   font-weight: 700;
 }
 
+.roster-note {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
 .roster-time {
   color: var(--text-dim);
   font-size: 12px;
   margin-top: 2px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #333a5c;
+  background: var(--card-2);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chip.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 25%, var(--card-2));
 }
 
 .badge {
