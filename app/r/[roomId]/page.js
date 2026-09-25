@@ -98,6 +98,19 @@ export default function RoomPage({ params }) {
     checkIn({ status: myStatus || STATUSES[0].id, note: noteText });
   }
 
+  async function leaveRoom() {
+    if (!memberId) return;
+    const res = await fetch(`/api/rooms/${roomId}?id=${encodeURIComponent(memberId)}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setMyStatus(null);
+      setNoteDraft("");
+      noteInitialized.current = false;
+      fetchMembers();
+    }
+  }
+
   function copyLink() {
     navigator.clipboard?.writeText(shareUrl).then(() => {
       setCopied(true);
@@ -107,6 +120,7 @@ export default function RoomPage({ params }) {
 
   const readyCount = members.filter((m) => m.status === "ready").length;
   const allReady = members.length > 0 && readyCount === members.length;
+  const isCheckedIn = members.some((m) => m.id === memberId);
 
   return (
     <div className="wrap">
@@ -154,6 +168,15 @@ export default function RoomPage({ params }) {
           <p className="subtitle" style={{ marginTop: 10, marginBottom: 0 }}>
             Enter your name to check in.
           </p>
+        )}
+        {isCheckedIn && (
+          <button
+            className="icon-btn btn-danger"
+            style={{ marginTop: 14, width: "100%" }}
+            onClick={leaveRoom}
+          >
+            Leave Room / Remove My Name
+          </button>
         )}
       </div>
 
